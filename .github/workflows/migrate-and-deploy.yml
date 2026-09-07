@@ -31,22 +31,69 @@ jobs:
             node --check "$file"
           done
 
+      - name: Ensure GitHub Pages is enabled for Actions
+        id: enable_pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+
+          if gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is already enabled."
+            exit 0
+          fi
+
+          echo "GitHub Pages is not enabled yet. Attempting to enable it with GitHub Actions as the build type."
+          RESPONSE=$(gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "repos/${GITHUB_REPOSITORY}/pages" \
+            -f build_type=workflow 2>&1)
+          STATUS=$?
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::GitHub Pages could not be enabled automatically. GitHub returned: $RESPONSE"
+            exit 0
+          fi
+
+          for attempt in 1 2 3 4 5; do
+            if gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "repos/${GITHUB_REPOSITORY}/pages" >/dev/null 2>&1; then
+              echo "ready=true" >> "$GITHUB_OUTPUT"
+              echo "GitHub Pages is enabled for GitHub Actions."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::GitHub accepted the Pages enable request, but the Pages site was not readable yet. Run the workflow again after a short wait."
+
       - name: Configure GitHub Pages
         id: pages
+        if: steps.enable_pages.outputs.ready == 'true'
         continue-on-error: true
         uses: actions/configure-pages@v5
 
-      - name: Explain Pages setup when disabled
-        if: steps.pages.outcome != 'success'
-        run: echo "Code validation passed. Enable Settings > Pages > Source > GitHub Actions to publish the site."
+      - name: Explain Pages setup when unavailable
+        if: steps.enable_pages.outputs.ready != 'true' || steps.pages.outcome != 'success'
+        run: echo "Code validation passed, but GitHub Pages is not ready for deployment yet."
 
       - name: Upload Pages artifact
-        if: steps.pages.outcome == 'success'
+        if: steps.enable_pages.outputs.ready == 'true' && steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
       - name: Deploy GitHub Pages
-        if: steps.pages.outcome == 'success'
+        if: steps.enable_pages.outputs.ready == 'true' && steps.pages.outcome == 'success'
         id: deployment
         uses: actions/deploy-pages@v4
