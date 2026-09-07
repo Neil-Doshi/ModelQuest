@@ -1,0 +1,75 @@
+/* ModelQuest v8 — clean non-overlapping world map */
+.v5-world{
+  min-height:0!important;
+  padding:24px!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:18px!important;
+  align-items:stretch!important;
+  overflow:visible!important;
+}
+.v5-world .v5-paths,
+.v5-world .v5-region-label{
+  display:none!important;
+}
+.v5-world .v5-node{
+  position:relative!important;
+  left:auto!important;
+  top:auto!important;
+  width:100%!important;
+  min-height:190px!important;
+  margin:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  padding:18px!important;
+  border-radius:20px!important;
+  transform:none!important;
+}
+.v5-world .v5-node:hover{
+  transform:translateY(-3px)!important;
+}
+.v5-world .v5-node.current{
+  order:-1;
+}
+.v5-world .v5-node[data-v5go="1"]{
+  order:-2;
+}
+.v5-world .v5-node h3{
+  font-size:20px!important;
+  line-height:1.18!important;
+  margin:8px 0 6px!important;
+}
+.v5-world .v5-node .alg{
+  line-height:1.35!important;
+  min-height:32px;
+}
+.v5-world .v5-fog{
+  opacity:.76!important;
+}
+.v5-map-wrap{
+  width:min(1500px,calc(100% - 32px))!important;
+}
+.v5-map-actions{
+  margin-top:20px!important;
+}
+@media(max-width:1180px){
+  .v5-world{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:900px){
+  .v5-world{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:640px){
+  .v5-world{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+    padding:14px!important;
+  }
+  .v5-world .v5-node{
+    min-height:0!important;
+  }
+}
