@@ -1,0 +1,151 @@
+name: Apply ModelQuest v7 upgrade
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/v7-upgrade.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Write v7 learning layer
+        run: |
+          cat > learning-v7.js <<'EOF'
+          /* ModelQuest v7 — Python primer, recall checkpoints, boss feedback, region meaning, and equation reveals. */
+          (()=>{
+          const V7={enhancing:false};
+          const PYTHON=[
+            {title:'1 · Variables — give a value a useful name',analogy:'A variable is like putting a label on a measurement so you can use it again without remembering the raw number.',body:'In engineering you might measure a force, temperature, or RPM. Python lets you store that value under a name. The equals sign means “put the value on the right into the name on the left.”',code:'force_n = 25\ntemperature_c = 68.4\nprint(force_n)  # 25',challenge:'If force_n = 25 and you write force_n = force_n + 5, what will force_n become?',answer:'30. Python reads the old value, adds 5, then stores the new value back under the same name.'},
+            {title:'2 · Lists and arrays — keep many measurements together',analogy:'Instead of writing five sensor readings on five loose sticky notes, put them into one labeled tray.',body:'A Python list stores several values in order. ML libraries often convert lists into NumPy arrays because arrays are designed for fast numerical calculations across many values at once.',code:'voltage = [0.42, 0.81, 1.22, 1.60]\nprint(voltage[0])  # first item -> 0.42\n\nimport numpy as np\nx = np.array(voltage)',challenge:'Why is voltage[0] the first value instead of voltage[1]?',answer:'Python counts positions from 0. The first slot is index 0, the second is index 1, and so on.'},
+            {title:'3 · Loops — repeat the same operation',analogy:'If you need to inspect 100 bolts, you do not invent a different inspection process for every bolt. You repeat the same steps.',body:'A loop tells Python to repeat a block of code for each item. The indented lines belong to the loop. In ML, libraries usually perform the heavy loops internally, but understanding the idea helps you read data-processing code.',code:'forces = [10, 20, 30]\nfor force in forces:\n    print(force * 2)',challenge:'How many times will print() run in this example?',answer:'Three times — once for each value in forces.'},
+            {title:'4 · Functions — package a reusable procedure',analogy:'A function is like a test procedure: give it an input, follow the same steps, and get a result back.',body:'Functions prevent repeated code and make a calculation easier to understand. def creates the function, parameters are the inputs, and return sends the result back.',code:'def force_from_voltage(voltage, slope, intercept):\n    return slope * voltage + intercept\n\nprint(force_from_voltage(1.05, 25.6, -0.7))',challenge:'Which three values are inputs to force_from_voltage?',answer:'voltage, slope, and intercept. The function combines those inputs and returns one predicted force.'},
+            {title:'5 · Imports — open a toolbox somebody already built',analogy:'Python is the workshop. A library is a toolbox. import puts that toolbox on your bench so you can use its tools.',body:'NumPy, scikit-learn, TensorFlow, PyTorch, and Transformers are libraries. “as np” is only a nickname. Importing a library does not train a model; it only makes its code available.',code:'import numpy as np\nfrom sklearn.linear_model import LinearRegression\n\n# np is a short nickname for numpy\n# LinearRegression is one tool imported from scikit-learn',challenge:'What does np mean in np.array([1, 2, 3])?',answer:'It is simply the nickname assigned to NumPy by “import numpy as np”.'}
+          ];
+          const REGIONS={
+            'Prediction Valley':'Start with the simplest question: can measurements predict a number or a probability? This region builds the idea of inputs, outputs, error, and model fit.',
+            'Decision Woods':'Learn models that reason through similarity, boundaries, and if/else-like decisions. The goal is to see how different model structures can solve classification problems.',
+            'Ensemble Forest':'One model can be unstable. This region combines many models and introduces real predictive-maintenance issues such as rare failures, leakage, and asymmetric mistakes.',
+            'Discovery Islands':'Sometimes nobody has labeled the answer. Here the goal is to discover structure, clusters, and simpler views of high-dimensional machine telemetry.',
+            'Neural Highlands':'Move from hand-readable models to networks that learn many interacting weights. This is where gradient-based training, generalization, and regularization become central.',
+            'Vision Ridge':'Images are structured grids, not ordinary tables. Learn how convolutional networks detect local patterns such as scratches, textures, and manufactured-surface defects.',
+            'Memory Pass':'Measurements arrive in time order. Learn why sequence history matters and how recurrent memory can help forecast equipment behavior.',
+            'Attention City':'Text and modern language models live here. Learn tokens, embeddings, attention, and why context changes what a word or maintenance note means.',
+            'AI Forge':'Adapt a pretrained model without retraining everything. LoRA and parameter-efficient fine-tuning show how modern models can be customized on realistic hardware.',
+            'Final Frontier':'Combine retrieval and generation into a useful engineering copilot that can search manuals and service records, answer with evidence, and expose its failure modes.'
+          };
+          const BOSS={
+            1:{what:'A single bad calibration point can rotate or shift the fitted line, increasing residuals and changing predictions elsewhere.',why:'Ordinary least-squares regression squares errors, so a far-away observation can have strong influence. Do not automatically delete it: verify the measurement, units, fixture, sensor range, and whether it represents a real operating condition.'},
+            2:{what:'Lowering the decision threshold usually catches more real failures, but it also turns more borderline good parts into FAIL predictions.',why:'The model scores stay the same. Only the cutoff changes. A lower cutoff increases recall while often reducing precision, so the right threshold depends on the cost of a missed defect versus a false reject.'},
+            3:{what:'If temperature is multiplied by 1000 and you do not scale features, distance calculations become dominated by temperature.',why:'KNN and many SVM settings care about geometric distance. A feature with a much larger numeric scale can drown out vibration or load even when those features are physically important.'},
+            4:{what:'A very deep tree can reach perfect or near-perfect training accuracy while unseen-shipment accuracy gets worse.',why:'Each extra split can capture quirks of the training records. The shallowest tree that performs well on unseen data is usually more trustworthy than the tree that memorizes every training case.'},
+            5:{what:'Adding a future repair flag can make validation scores jump dramatically even though the deployable model has not become smarter.',why:'That feature leaks information from after the event. The model is effectively being shown part of the answer. A lower honest score is more valuable than a spectacular leaked score.'},
+            6:{what:'K-Means will return exactly the k clusters you request, including eight clusters even when only a few operating modes are physically meaningful.',why:'The algorithm optimizes its mathematical objective; it does not prove that every cluster corresponds to a real machine state. Domain interpretation and stability checks are still required.'},
+            7:{what:'Too few hidden neurons may underfit; far more neurons increase capacity and parameters without guaranteeing better unseen-data performance.',why:'Network capacity must match the pattern and the amount of data. More neurons create more flexible boundaries, but they also create more ways to fit noise.'},
+            8:{what:'A model can keep improving on the old production batch while performance on the new batch stalls or falls.',why:'Training accuracy measures memory of the training distribution. Regularization and validation help, but a genuine batch or distribution shift may require better data, monitoring, or retraining.'},
+            9:{what:'A useful convolution filter activates strongly where its learned local pattern appears. Pooling reduces spatial resolution while keeping strong responses.',why:'CNNs reuse small filters across the image, allowing them to detect the same defect pattern in many locations instead of learning a separate rule for every pixel.'},
+            10:{what:'A very short history window can miss slow trends; a very long window can add noise, cost, and harder training.',why:'Sequence models only receive the context you give them. Window size should reflect the physical timescale of the process and must be evaluated without leaking future measurements.'},
+            11:{what:'Changing the maintenance note changes which tokens attend to which other tokens and therefore changes contextual representations.',why:'Attention is computed from the current token representations. It is dynamic context weighting, not a fixed dictionary of word meanings and not proof of human-style reasoning.'},
+            12:{what:'Increasing LoRA rank increases adapter capacity and trainable parameters; quantization can reduce memory but introduces compatibility and quality tradeoffs.',why:'LoRA is efficient because the large base model stays mostly frozen. The adapter should be large enough for the task, not automatically as large as possible.'},
+            13:{what:'Increasing top-k retrieves more chunks, but after a point the answer can become worse because irrelevant material crowds the useful evidence.',why:'RAG quality begins with retrieval. Chunk size, embeddings, filtering, top-k, reranking, and grounding determine whether the language model receives the right evidence.'}
+          };
+          const CHECKPOINTS={
+            4:[['Why can scaling matter for KNN but not change the physical machine itself?','Scaling changes the numerical geometry used by the algorithm, not the machine. It prevents a large-unit feature from dominating distance.'],['What is the difference between a feature and a target?','Features are clues available to the model; the target is the answer the supervised model is trained to predict.'],['Why can a deeper decision tree become worse on new data?','It can memorize small training-set quirks instead of learning rules that generalize.']],
+            8:[['Why is a 99% training score not enough?','Because the model is useful only if the learned pattern works on unseen future data.'],['What does leakage do to evaluation?','It lets information from the answer or future enter training/evaluation, creating unrealistically high scores.'],['Why can many trees be more stable than one tree?','Different trees make different errors; averaging or voting reduces dependence on one unstable set of splits.']],
+            11:[['What is the difference between a CNN and an LSTM input assumption?','A CNN exploits local spatial structure; an LSTM is built for ordered sequences where earlier steps can affect later ones.'],['What does a neural-network weight actually do?','It multiplies a signal, controlling how strongly that signal influences the next calculation.'],['Why is attention called contextual?','The relevance weights are recomputed for the current sequence, so a token can use different surrounding information in different sentences.']],
+            13:[['Why does LoRA save training resources?','Most base-model weights remain frozen; only small low-rank adapter parameters are updated.'],['What is the first thing to inspect when a RAG answer is wrong?','Inspect the retrieved chunks. If the evidence is wrong or missing, the generator never had a fair chance.'],['Why is “more context” not automatically better?','Irrelevant context can distract the model, waste the context window, and reduce grounding quality.']]
+          };
+          const EQ={
+            2:{eq:'p(fail) = 1 / (1 + e^(−z)),   z = w·x + b',plain:'The model first makes a weighted score z from the measurements. The sigmoid turns that score into a value between 0 and 1. The threshold then converts that score into PASS or FAIL.'},
+            3:{eq:'KNN: d(x,xᵢ)=√Σ(xⱼ−xᵢⱼ)²    ·    SVM: maximize margin',plain:'KNN asks which labeled points are closest. SVM instead tries to place a separating boundary with as much breathing room as possible between classes.'},
+            4:{eq:'Gini = 1 − Σ pₖ²',plain:'A tree tests candidate splits and prefers splits that make the child groups purer. Gini is one common impurity score: it becomes smaller when one class dominates a node.'},
+            5:{eq:'Forest: ŷ = vote(T₁(x), …, Tₙ(x))',plain:'Each tree makes its own prediction from a slightly different view of the data. The forest combines those votes instead of trusting one tree.'},
+            6:{eq:'K-Means: minimize Σ ||xᵢ − μcluster(i)||²',plain:'K-Means moves centroids so points stay as close as possible to their assigned center. PCA solves a different problem: it finds directions that preserve large amounts of variation.'},
+            7:{eq:'z = w·x + b,   a = f(z),   θ ← θ − η∇L',plain:'A neuron forms a weighted sum, adds a bias, and applies an activation. Training uses gradients to update the parameters in directions that reduce loss.'},
+            8:{eq:'Ltotal = Ldata + λ Σ w²',plain:'L2 regularization adds a penalty for very large weights. The model must balance fitting the training data with keeping the solution less extreme.'},
+            9:{eq:'y[i,j] = Σu,v K[u,v] · x[i+u,j+v]',plain:'A convolution takes one small image patch, multiplies it by a filter, adds the products, then slides the same filter to the next location.'},
+            10:{eq:'cₜ = fₜ ⊙ cₜ₋₁ + iₜ ⊙ c̃ₜ',plain:'An LSTM combines remembered information with new candidate information. Learned gates decide how much old memory to keep and how much new information to add.'},
+            11:{eq:'Attention(Q,K,V) = softmax(QKᵀ / √dₖ) V',plain:'Queries are compared with keys to produce relevance scores. Softmax turns those scores into weights, which are used to mix the value vectors.'},
+            12:{eq:'Wadapted = Wfrozen + (α/r)BA',plain:'The original weight matrix stays frozen. LoRA learns two much smaller matrices B and A whose product acts as a compact update.'},
+            13:{eq:'cos(q,d) = (q·d) / (||q|| ||d||)',plain:'Embedding retrieval often compares the question vector q with document vectors d. Higher cosine similarity means the vectors point in more similar directions in embedding space.'}
+          };
+          function esc7(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+          function questId(){const t=document.querySelector('.v5-quest-title .v5-kicker')?.textContent||'';const m=t.match(/MODEL\s+0?(\d+)/i);return m?+m[1]:null}
+          function screenName(){return document.querySelector('.v5-step.active b')?.textContent||''}
+          function openPythonWorkshop(){
+            const root=document.querySelector('#view'); if(!root)return;
+            root.innerHTML=`<div class="v5-root"><main class="v7-workshop"><div class="v7-workshop-head"><div><div class="v5-kicker">BEFORE YOUR FIRST MODEL · 15–20 MIN</div><h1>Python Workshop</h1><p>You do not need to become a programmer first. Learn just enough Python to understand what the ML code is saying.</p></div><button class="v5-btn v5-main-menu-btn" id="v7PyReturn">← Base Camp</button></div><div class="v7-py-layout"><nav class="v7-py-nav">${PYTHON.map((x,i)=>`<button class="v7-py-tab ${i===0?'active':''}" data-py="${i}">${x.title.split(' — ')[0]}</button>`).join('')}</nav><section class="v7-py-panel" id="v7PyPanel"></section></div></main></div>`;
+            const show=i=>{const x=PYTHON[i];document.querySelectorAll('[data-py]').forEach((b,n)=>b.classList.toggle('active',n===i));document.querySelector('#v7PyPanel').innerHTML=`<div class="v7-lesson"><div class="v5-kicker">PYTHON BASIC</div><h2>${esc7(x.title)}</h2><div class="v7-analogy"><b>Analogy</b><p>${esc7(x.analogy)}</p></div><p>${esc7(x.body)}</p><pre class="v7-code">${esc7(x.code)}</pre><div class="v7-mini-challenge"><b>Check yourself</b><p>${esc7(x.challenge)}</p><button class="v5-btn" id="v7PyReveal">Reveal answer</button><div class="v7-answer" id="v7PyAnswer" hidden>${esc7(x.answer)}</div></div>${i<PYTHON.length-1?'<button class="v5-btn primary" id="v7PyNext">Next Python basic →</button>':'<button class="v5-btn primary" id="v7PyDone">✓ I understand the essentials — start Model 1</button>'}</div>`;document.querySelector('#v7PyReveal').onclick=()=>document.querySelector('#v7PyAnswer').hidden=false;document.querySelector('#v7PyNext')?.addEventListener('click',()=>show(i+1));document.querySelector('#v7PyDone')?.addEventListener('click',()=>{try{st.pythonWorkshopDone=true;save()}catch(e){};go(1)})};
+            document.querySelectorAll('[data-py]').forEach(b=>b.onclick=()=>show(+b.dataset.py));document.querySelector('#v7PyReturn').onclick=()=>showHome();show(0);scrollTo({top:0,behavior:'smooth'});
+          }
+          function addPythonEntry(){
+            const grid=document.querySelector('.v5-landing .v5-resource-grid');
+            if(grid&&!grid.querySelector('[data-v7-python]')){const b=document.createElement('button');b.className='v5-resource v7-python-entry';b.dataset.v7Python='1';b.innerHTML=`<small>START HERE IF PYTHON IS NEW</small><h3>Python Workshop</h3><p>Variables, lists, loops, functions and imports — only the pieces you need before Model 1.${typeof st!=='undefined'&&st.pythonWorkshopDone?' <b>✓ Completed</b>':''}</p>`;b.onclick=openPythonWorkshop;grid.prepend(b)}
+            const actions=document.querySelector('.v5-map-actions');
+            if(actions&&!actions.querySelector('[data-v7-python]')){const b=document.createElement('button');b.className='v5-btn v5-main-menu-btn';b.dataset.v7Python='1';b.textContent='Python Workshop';b.onclick=openPythonWorkshop;actions.appendChild(b)}
+          }
+          function addRegionGuide(){const head=document.querySelector('.v5-map-head');if(!head||document.querySelector('.v7-region-guide'))return;const d=document.createElement('details');d.className='v7-region-guide';d.innerHTML=`<summary>What do the world regions mean?</summary><div class="v7-region-grid">${Object.entries(REGIONS).map(([n,t])=>`<div><b>${esc7(n)}</b><p>${esc7(t)}</p></div>`).join('')}</div>`;head.insertAdjacentElement('afterend',d);document.querySelectorAll('.v5-region-label').forEach(el=>{if(REGIONS[el.textContent.trim()])el.title=REGIONS[el.textContent.trim()]})}
+          function addBossFeedback(){const box=document.querySelector('.v5-challenge');const id=questId();if(!box||!id||box.querySelector('.v7-boss-feedback'))return;const x=BOSS[id];const wrap=document.createElement('div');wrap.className='v7-boss-feedback';wrap.innerHTML=`<div class="v5-kicker">CLOSE THE LOOP</div><h3>Write your reasoning before you reveal the explanation.</h3><textarea id="v7BossAttempt" placeholder="I predict that... because..."></textarea><button class="v5-btn" id="v7BossReveal">Reveal what should happen + why</button><div class="v7-boss-answer" id="v7BossAnswer" hidden><div><b>What should happen</b><p>${esc7(x.what)}</p></div><div><b>Why</b><p>${esc7(x.why)}</p></div></div>`;box.appendChild(wrap);wrap.querySelector('#v7BossReveal').onclick=()=>{const ta=wrap.querySelector('#v7BossAttempt');if(!ta.value.trim()){ta.placeholder='Write at least one prediction first — even if you are unsure.';ta.focus();return}wrap.querySelector('#v7BossAnswer').hidden=false}}
+          function addRecall(){const id=questId(),qs=CHECKPOINTS[id],box=document.querySelector('.v5-challenge');if(!qs||!box||box.querySelector('.v7-recall'))return;const r=document.createElement('section');r.className='v7-recall';r.innerHTML=`<div class="v5-kicker">REGION CHECKPOINT · RETRIEVE FROM MEMORY</div><h3>Before moving on, can you reconnect the earlier ideas?</h3><p>Do not aim for perfect wording. Try to explain the idea from memory, then reveal the answer.</p>${qs.map((q,i)=>`<div class="v7-recall-q"><b>${i+1}. ${esc7(q[0])}</b><button class="v5-btn" data-recall="${i}">Reveal</button><p data-recall-answer="${i}" hidden>${esc7(q[1])}</p></div>`).join('')}`;box.appendChild(r);r.querySelectorAll('[data-recall]').forEach(b=>b.onclick=()=>r.querySelector(`[data-recall-answer="${b.dataset.recall}"]`).hidden=false)}
+          function addEquation(){const id=questId(),eq=EQ[id];if(!eq||!screenName().includes('Math'))return;const host=document.querySelector('#v5Screen');if(!host||host.querySelector('.v7-equation-card'))return;const c=document.createElement('div');c.className='v5-card v7-equation-card';c.innerHTML=`<div class="v5-kicker">SHOW ME THE ACTUAL EQUATION</div><h2>One equation worth understanding</h2><div class="v7-equation">${esc7(eq.eq)}</div><p>${esc7(eq.plain)}</p><p class="v7-math-note">You do not need to memorize this symbol-by-symbol. First connect each part to the visual model, then return later when the notation feels familiar.</p>`;host.appendChild(c)}
+          function enhance(){if(V7.enhancing)return;V7.enhancing=true;try{addPythonEntry();addRegionGuide();addBossFeedback();addRecall();addEquation()}finally{V7.enhancing=false}}
+          const mo=new MutationObserver(()=>queueMicrotask(enhance));if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{enhance();mo.observe(document.body,{childList:true,subtree:true})});else{enhance();mo.observe(document.body,{childList:true,subtree:true})}
+          window.ModelQuestV7={openPythonWorkshop};
+          })();
+          EOF
+
+          cat > learning-v7.css <<'EOF'
+          /* ModelQuest v7 learning additions */
+          .v7-workshop{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:32px 0 72px}.v7-workshop-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:26px}.v7-workshop-head h1{font-size:clamp(2.4rem,6vw,5.2rem);margin:5px 0 10px;letter-spacing:-.04em}.v7-workshop-head p{max-width:700px;color:#a9a9b0;line-height:1.65}.v7-py-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px}.v7-py-nav{display:grid;align-content:start;gap:8px;position:sticky;top:92px}.v7-py-tab{border:1px solid #2d2d31;background:#0b0b0d;color:#d4d4d8;padding:15px 16px;border-radius:14px;text-align:left;font-weight:750;cursor:pointer;min-height:52px}.v7-py-tab.active,.v7-py-tab:hover{background:#fff;color:#050505;border-color:#fff}.v7-py-panel{min-width:0}.v7-lesson{border:1px solid #29292e;background:linear-gradient(180deg,#0d0d0f,#080809);border-radius:24px;padding:clamp(20px,4vw,34px)}.v7-lesson h2{font-size:clamp(1.55rem,3vw,2.35rem);margin:8px 0 14px}.v7-lesson>p{line-height:1.75;color:#c5c5cb}.v7-analogy{border-left:2px solid #fff;background:#111114;border-radius:0 16px 16px 0;padding:14px 17px;margin:16px 0}.v7-analogy p{margin:6px 0 0;line-height:1.65;color:#ddd}.v7-code{white-space:pre-wrap;overflow:auto;background:#030304;border:1px solid #242428;padding:18px;border-radius:16px;line-height:1.65;color:#eee}.v7-mini-challenge{margin:18px 0;padding:17px;border:1px dashed #3a3a40;border-radius:16px}.v7-mini-challenge p{line-height:1.6}.v7-answer{margin-top:12px;padding:13px 14px;background:#121216;border-radius:12px;color:#d6d6dc;line-height:1.6}.v7-python-entry{outline:1px solid rgba(255,255,255,.13)}.v7-region-guide{margin:18px 0 24px;border:1px solid #29292e;background:#09090b;border-radius:18px;overflow:hidden}.v7-region-guide summary{cursor:pointer;padding:16px 18px;font-weight:800;min-height:52px;display:flex;align-items:center}.v7-region-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 14px 14px}.v7-region-grid>div{border:1px solid #242428;background:#0e0e11;border-radius:14px;padding:14px}.v7-region-grid p{margin:6px 0 0;color:#a7a7ae;line-height:1.55;font-size:.9rem}.v7-boss-feedback,.v7-recall{margin-top:22px;padding:19px;border:1px solid #313138;background:#0b0b0e;border-radius:18px}.v7-boss-feedback textarea{width:100%;min-height:110px;resize:vertical;margin:12px 0;padding:14px;border-radius:14px;border:1px solid #33333a;background:#050506;color:#fff;font:inherit;line-height:1.55}.v7-boss-answer{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.v7-boss-answer>div{border:1px solid #29292f;background:#111114;border-radius:14px;padding:14px}.v7-boss-answer p{color:#c6c6cc;line-height:1.6;margin:7px 0 0}.v7-recall>p{color:#aaaab1;line-height:1.55}.v7-recall-q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-top:1px solid #242429;padding:14px 0}.v7-recall-q p{grid-column:1/-1;margin:0;padding:12px 14px;background:#111114;border-radius:12px;color:#c7c7cd;line-height:1.6}.v7-equation-card{margin-top:18px!important}.v7-equation{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:clamp(1rem,2.5vw,1.45rem);padding:18px;border-radius:15px;background:#030304;border:1px solid #2d2d32;overflow:auto;white-space:nowrap}.v7-equation-card p{line-height:1.7}.v7-math-note{color:#909098!important;font-size:.9rem}.v5-main-menu-btn,.v5-resource,.v5-btn{touch-action:manipulation}.v5-main-menu-btn{min-height:50px!important;padding:12px 18px!important}.v5-resource{min-height:132px}.v5-node{touch-action:manipulation}
+          @media(max-width:760px){.v7-workshop{width:min(100% - 22px,1180px);padding-top:20px}.v7-workshop-head{display:block}.v7-workshop-head .v5-btn{margin-top:12px}.v7-py-layout{grid-template-columns:1fr}.v7-py-nav{position:static;display:flex;overflow-x:auto;padding-bottom:6px}.v7-py-tab{min-width:150px}.v7-region-grid{grid-template-columns:1fr}.v7-boss-answer{grid-template-columns:1fr}.v7-recall-q{grid-template-columns:1fr}.v7-recall-q .v5-btn{justify-self:start}.v7-equation{white-space:normal;word-break:break-word}.v5-main-menu-btn{min-height:54px!important}.v5-btn{min-height:44px}}
+          EOF
+
+      - name: Make the readable world the only active UI generation
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          let html=fs.readFileSync('index.html','utf8');
+          html=html.replace('<link rel="stylesheet" href="explanations-v6.css">','<link rel="stylesheet" href="explanations-v6.css">\n<link rel="stylesheet" href="learning-v7.css">');
+          html=html.replace(/<script>window\.__mqv5=\[\];<\/script>[\s\S]*?<script src="world-v5\.js"><\/script>\s*<script src="explanations-v6\.js"><\/script>/,
+            '<script src="world-current.js"></script>\n<script src="explanations-v6.js"></script>\n<script src="learning-v7.js"></script>');
+          if(!html.includes('world-current.js')||html.includes('world-v5-part1.js')) throw new Error('index migration did not apply');
+          fs.writeFileSync('index.html',html);
+
+          let app=fs.readFileSync('app.js','utf8');
+          const old="$('#resume').onclick=$('#continue').onclick=()=>go(st.current||1);$('#start').onclick=()=>go(1);";
+          const fresh="const resumeBtn=$('#resume'),continueBtn=$('#continue'),startBtn=$('#start');if(resumeBtn)resumeBtn.onclick=()=>go(st.current||1);if(continueBtn)continueBtn.onclick=()=>go(st.current||1);if(startBtn)startBtn.onclick=()=>go(1);";
+          if(!app.includes(old)) throw new Error('expected legacy start/continue binding not found');
+          app=app.replace(old,fresh);
+          app=app.replace('renderNav();showHome();progress();','renderNav();progress();');
+          fs.writeFileSync('app.js',app);
+
+          let studio=fs.readFileSync('studio-v4.js','utf8');
+          studio=studio.replace(/\nshowHome\(\);\s*$/,'\n// Initial rendering is owned by world-current.js.\n');
+          fs.writeFileSync('studio-v4.js',studio);
+          NODE
+          rm -f world-v5-part1.js world-v5-part2.js world-v5-part3.js world-v5-part4.js world-v5-part5.js world-v5.js
+          rm -f .github/workflows/unpack-v5.yml
+
+      - name: Validate the upgraded site
+        run: |
+          for f in *.js; do echo "Checking $f"; node --check "$f"; done
+          grep -q 'world-current.js' index.html
+          ! grep -q 'world-v5-part1.js' index.html
+          ! grep -q "\$('#continue').onclick" app.js
+
+      - name: Commit v7
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Upgrade ModelQuest learning flow and clean active UI architecture"
+          git push origin main
