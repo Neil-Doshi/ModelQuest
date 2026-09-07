@@ -39,7 +39,7 @@ for(let id=2;id<=13;id++){
 }
 if(!/6:\{title:'Hidden Modes[^\n]+\['Clusters \(K\)',2,8,3,1\]/.test(labs)) errors.push('Model 6 TRY IT lab must allow K through 8.');
 if(!/future_repair_flag/.test(labs) || !/data-demo/.test(labs)) errors.push('Model 5 TRY IT lab must contain an explicit leakage demonstration.');
-if(!/lr>\.28/.test(labs) || !/state\.loss=Math\.min\(3,state\.loss\*\(1\+overshoot\)\)/.test(labs)) errors.push('Model 7 TRY IT lab must visibly model too-large learning-rate failure.');
+if(!/lr>\.28/.test(labs) || !/state\.loss=Math\.min\(2\.2,state\.loss\*\(1\+lr\*\.65\)\)/.test(labs)) errors.push('Model 7 TRY IT lab must visibly model too-large learning-rate failure.');
 
 for(const name of ['const WORKED=','const FAILURE=','const GATES=','NUMBERS BEFORE SYMBOLS','BREAK IT ON PURPOSE','UNDERSTANDING CHECK']){
   if(!quality.includes(name)) errors.push(`quality-v11.js missing teaching contract: ${name}`);
