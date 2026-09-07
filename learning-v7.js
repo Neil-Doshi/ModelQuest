@@ -65,7 +65,7 @@ function openPythonWorkshop(){
   document.querySelectorAll('[data-py]').forEach(b=>b.onclick=()=>show(+b.dataset.py));document.querySelector('#v7PyReturn').onclick=()=>showHome();show(0);scrollTo({top:0,behavior:'smooth'});
 }
 function addPythonEntry(){
-  const grid=document.querySelector('.v5-landing .v5-resource-grid');
+  const grid=document.querySelector('.v5-home-sections .v5-resource-grid');
   if(grid&&!grid.querySelector('[data-v7-python]')){const b=document.createElement('button');b.className='v5-resource v7-python-entry';b.dataset.v7Python='1';b.innerHTML=`<small>START HERE IF PYTHON IS NEW</small><h3>Python Workshop</h3><p>Variables, lists, loops, functions and imports — only the pieces you need before Model 1.${typeof st!=='undefined'&&st.pythonWorkshopDone?' <b>✓ Completed</b>':''}</p>`;b.onclick=openPythonWorkshop;grid.prepend(b)}
   const actions=document.querySelector('.v5-map-actions');
   if(actions&&!actions.querySelector('[data-v7-python]')){const b=document.createElement('button');b.className='v5-btn v5-main-menu-btn';b.dataset.v7Python='1';b.textContent='Python Workshop';b.onclick=openPythonWorkshop;actions.appendChild(b)}
