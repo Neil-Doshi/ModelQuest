@@ -1,7 +1,7 @@
 /* ModelQuest v11 — beginner foundations, worked math, failure experiments and understanding checks. */
 (() => {
   const byId = id => (globalThis.MQ_CURRICULUM || []).find(x => x.id === Number(id));
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   function currentId(){
     const text = document.querySelector('.v5-quest-title .v5-kicker')?.textContent || document.querySelector('.eyebrow')?.textContent || '';
@@ -24,6 +24,16 @@
     11:'Attention numbers vary by pretrained model/head. A healthy run prints the focus token “hot” and several tokens with numeric attention weights.',
     12:'A healthy run prints that only a small fraction of parameters are trainable. The tiny model may generate poor prose; that is not the learning objective.',
     13:'A healthy run should retrieve the bearing service bulletin near rank 1 for the >85 C bearing question. Inspect retrieval order before judging any generated wording.'
+  };
+
+  const SETUP={
+    7:{title:'TensorFlow check',gpu:false,install:'No extra install is normally needed in Colab.',code:"import sys, tensorflow as tf\nprint('Python:', sys.version.split()[0])\nprint('TensorFlow:', tf.__version__)"},
+    8:{title:'scikit-learn check',gpu:false,install:'No extra install is normally needed in Colab.',code:"import sys, sklearn\nprint('Python:', sys.version.split()[0])\nprint('scikit-learn:', sklearn.__version__)"},
+    9:{title:'CNN runtime check',gpu:true,install:'TensorFlow is normally preinstalled. Use a GPU only to make training faster.',code:"import tensorflow as tf\nprint('TensorFlow:', tf.__version__)\nprint('GPU devices:', tf.config.list_physical_devices('GPU'))"},
+    10:{title:'LSTM runtime check',gpu:true,install:'TensorFlow is normally preinstalled. The lesson still works on CPU.',code:"import tensorflow as tf\nprint('TensorFlow:', tf.__version__)\nprint('GPU devices:', tf.config.list_physical_devices('GPU'))"},
+    11:{title:'Transformer environment',gpu:false,install:'Fresh Colab if needed: !pip -q install transformers',code:"import sys, transformers\nprint('Python:', sys.version.split()[0])\nprint('Transformers:', transformers.__version__)"},
+    12:{title:'LoRA / PEFT environment',gpu:true,install:'Fresh Colab if needed: !pip -q install transformers peft',code:"import sys, transformers, peft\nprint('Python:', sys.version.split()[0])\nprint('Transformers:', transformers.__version__)\nprint('PEFT:', peft.__version__)"},
+    13:{title:'RAG retrieval environment',gpu:false,install:'Fresh Colab if needed: !pip -q install sentence-transformers',code:"import sys, sentence_transformers\nprint('Python:', sys.version.split()[0])\nprint('Sentence Transformers:', sentence_transformers.__version__)"}
   };
 
   const WORKED={
@@ -137,6 +147,12 @@
     guide.innerHTML=`<article><small>BASELINE FIRST</small><h3>What must ML beat?</h3><p>${esc(c.baseline)}</p></article><article><small>EXPECTED OUTPUT</small><h3>Sanity-check anchor</h3><p>${esc(ANCHORS[id]||c.expected)}</p></article><article><small>WHERE IT RUNS</small><h3>Environment</h3><p>${esc(c.environment)}</p></article>`;
     grid.parentElement.insertBefore(guide,grid);
   }
+  function addEnvironmentSetup(){
+    const id=currentId(),s=SETUP[id],grid=document.querySelector('.v5-code-grid');if(!s||!grid||document.querySelector('.mq11-setup'))return;
+    const box=document.createElement('section');box.className='mq11-setup';
+    box.innerHTML=`<div><small>REPRODUCIBLE RUN</small><h3>${esc(s.title)}</h3><p>${esc(s.install)}</p>${s.gpu?'<p><b>Colab GPU path:</b> Runtime → Change runtime type → choose a GPU when available. CPU still remains a valid debugging fallback.</p>':''}<p>Run this tiny check before changing lesson code. If an API error appears later, save these versions with the error message.</p></div><pre>${esc(s.code)}</pre>`;
+    grid.parentElement.insertBefore(box,grid);
+  }
   function addTerminologyNote(){
     const id=currentId(); if(!id||document.querySelector('.mq11-term-note'))return;
     const dataScreen=document.querySelector('.v5-data-grid'); if(!dataScreen)return;
@@ -170,7 +186,7 @@
     host.prepend(box);
   }
 
-  function enhance(){addTopEntry();addMapEntry();addPrerequisiteStrip();addCodeReadiness();addTerminologyNote();addWorkedMath();addFailureExperiment();addGate();}
+  function enhance(){addTopEntry();addMapEntry();addPrerequisiteStrip();addCodeReadiness();addEnvironmentSetup();addTerminologyNote();addWorkedMath();addFailureExperiment();addGate();}
   const mo=new MutationObserver(()=>enhance());
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{enhance();mo.observe(document.body,{childList:true,subtree:true});});
   else{enhance();mo.observe(document.body,{childList:true,subtree:true});}
