@@ -1,0 +1,59 @@
+name: ModelQuest v7 browser smoke test
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/runtime-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Playwright Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Run ModelQuest locally and test desktop + mobile
+        run: |
+          python3 -m http.server 4173 >/tmp/modelquest-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 2
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            for (const viewport of [{width:1280,height:900},{width:390,height:844}]) {
+              const page=await browser.newPage({viewport});
+              const errors=[];
+              page.on('pageerror',e=>errors.push('pageerror: '+e.message));
+              page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push('console: '+m.text())});
+              await page.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded'});
+              await page.waitForSelector('.v5-landing',{timeout:10000});
+              await page.waitForSelector('[data-v7-python]',{timeout:5000});
+              await page.locator('[data-v7-python]').first().click();
+              await page.waitForSelector('.v7-workshop');
+              if(!(await page.locator('.v7-py-tab').count()===5)) throw new Error('Python Workshop does not have 5 basics');
+              await page.locator('#v7PyReturn').click();
+              await page.waitForSelector('.v5-landing');
+              await page.locator('#v5Start').click();
+              await page.waitForSelector('.v5-map-wrap');
+              await page.waitForSelector('.v7-region-guide');
+              await page.locator('[data-v5go="1"]').click();
+              await page.waitForSelector('.v5-quest');
+              await page.locator('[data-v5step="7"]').click();
+              await page.waitForSelector('.v7-boss-feedback');
+              if(!(await page.locator('#v7BossAttempt').isVisible())) throw new Error('Boss reasoning input missing');
+              if(errors.length) throw new Error(`Runtime errors at ${viewport.width}px: ${errors.join(' | ')}`);
+              await page.close();
+            }
+            await browser.close();
+            console.log('ModelQuest v7 desktop and mobile smoke tests passed.');
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
