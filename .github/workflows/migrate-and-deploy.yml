@@ -32,13 +32,21 @@ jobs:
           done
 
       - name: Configure GitHub Pages
+        id: pages
+        continue-on-error: true
         uses: actions/configure-pages@v5
 
+      - name: Explain Pages setup when disabled
+        if: steps.pages.outcome != 'success'
+        run: echo "Code validation passed. Enable Settings > Pages > Source > GitHub Actions to publish the site."
+
       - name: Upload Pages artifact
+        if: steps.pages.outcome == 'success'
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
 
       - name: Deploy GitHub Pages
+        if: steps.pages.outcome == 'success'
         id: deployment
         uses: actions/deploy-pages@v4
