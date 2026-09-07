@@ -5,6 +5,10 @@ on:
     branches: ["main"]
     paths:
       - ".github/workflows/runtime-smoke.yml"
+      - "learning-v7.js"
+      - "learning-v7.css"
+      - "world-current.js"
+      - "index.html"
 
 permissions:
   contents: read
@@ -36,10 +40,12 @@ jobs:
               page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('favicon'))errors.push('console: '+m.text())});
               await page.goto('http://127.0.0.1:4173/',{waitUntil:'domcontentloaded'});
               await page.waitForSelector('.v5-landing',{timeout:10000});
+              await page.waitForTimeout(250);
+              if(errors.length) throw new Error(`Initial runtime errors at ${viewport.width}px: ${errors.join(' | ')}`);
               await page.waitForSelector('[data-v7-python]',{timeout:5000});
               await page.locator('[data-v7-python]').first().click();
               await page.waitForSelector('.v7-workshop');
-              if(!(await page.locator('.v7-py-tab').count()===5)) throw new Error('Python Workshop does not have 5 basics');
+              if((await page.locator('.v7-py-tab').count())!==5) throw new Error('Python Workshop does not have 5 basics');
               await page.locator('#v7PyReturn').click();
               await page.waitForSelector('.v5-landing');
               await page.locator('#v5Start').click();
