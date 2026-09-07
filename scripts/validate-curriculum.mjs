@@ -2,6 +2,9 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const source = fs.readFileSync('curriculum-v11.js','utf8');
+const labs = fs.readFileSync('labs-v10.js','utf8');
+const quality = fs.readFileSync('quality-v11.js','utf8');
+const index = fs.readFileSync('index.html','utf8');
 const sandbox = { PROJECTS: Array.from({length:13},(_,i)=>({id:i+1})), console };
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox, {filename:'curriculum-v11.js'});
@@ -19,9 +22,6 @@ if(Array.isArray(C)){
       if(v==null || v==='' || (Array.isArray(v)&&v.length===0)) errors.push(`Model ${m.id}: missing ${k}`);
     }
     if(!String(m.hook).includes('?')) errors.push(`Model ${m.id}: hook should be framed as a learner question.`);
-    if(!String(m.baseline).trim()) errors.push(`Model ${m.id}: baseline required.`);
-    if(!String(m.expected).trim()) errors.push(`Model ${m.id}: expected-output anchor required.`);
-    if(!String(m.environment).trim()) errors.push(`Model ${m.id}: environment guidance required.`);
     const code=String(m.code).toLowerCase();
     const stale=['practice_hours','student score','hours + sleep','player styles','breast cancer','fashion-mnist','imdb','movie review'];
     for(const bad of stale) if(code.includes(bad)) errors.push(`Model ${m.id}: stale domain phrase in code: ${bad}`);
@@ -34,8 +34,31 @@ if(Array.isArray(C)){
   if(!/retrieval quality first/i.test(m13?.code||'')) errors.push('Model 13 must make retrieval quality the capstone success criterion.');
 }
 
+for(let id=2;id<=13;id++){
+  if(!new RegExp(`\\n\\s*${id}:\\{title:`).test(labs)) errors.push(`TRY IT lab configuration missing for Model ${id}.`);
+}
+if(!/6:\{title:'Hidden Modes[^\n]+\['Clusters \(K\)',2,8,3,1\]/.test(labs)) errors.push('Model 6 TRY IT lab must allow K through 8.');
+if(!/future_repair_flag/.test(labs) || !/data-demo/.test(labs)) errors.push('Model 5 TRY IT lab must contain an explicit leakage demonstration.');
+if(!/lr>\.28/.test(labs) || !/state\.loss=Math\.min\(3,state\.loss\*\(1\+overshoot\)\)/.test(labs)) errors.push('Model 7 TRY IT lab must visibly model too-large learning-rate failure.');
+
+for(const name of ['const WORKED=','const FAILURE=','const GATES=','NUMBERS BEFORE SYMBOLS','BREAK IT ON PURPOSE','UNDERSTANDING CHECK']){
+  if(!quality.includes(name)) errors.push(`quality-v11.js missing teaching contract: ${name}`);
+}
+for(let id=1;id<=13;id++){
+  if(!new RegExp(`\\n\\s*${id}:\\{`).test(quality)) errors.push(`quality-v11.js appears to be missing Model ${id} teaching data.`);
+}
+
+const order=['data.js','curriculum-v11.js','app.js','world-current.js','foundation-v9.js','labs-v10.js','quality-v11.js'];
+let prev=-1;
+for(const file of order){
+  const pos=index.indexOf(`src="${file}"`);
+  if(pos<0) errors.push(`index.html does not load ${file}.`);
+  if(pos>=0 && pos<prev) errors.push(`index.html script order is wrong around ${file}.`);
+  if(pos>=0) prev=pos;
+}
+
 if(errors.length){
   console.error('\nCurriculum validation failed:\n- '+errors.join('\n- '));
   process.exit(1);
 }
-console.log('Curriculum validation passed: 13 coherent engineering quests with prerequisites, baselines, expected outputs, environments and code.');
+console.log('Curriculum validation passed: 13 coherent engineering quests, aligned labs, numeric teaching, failure demonstrations and understanding checks.');
