@@ -1,11 +1,14 @@
-/* ModelQuest v8 clarity pass — fixes Model 1 wording and removes stale practice-hours model diagram. */
+/* ModelQuest clarity pass — teaches why ML exists before teaching Linear Regression. */
 (()=>{
   const explanation={
-    examples:'These are calibration examples where both values are already known. For example, 0.42 V happened when 10 N was applied. The model uses several pairs like this to see the relationship.',
-    line:'Linear regression looks for the straight line that stays as close as possible to all of the calibration points. It is not choosing a line by eye.',
-    parameters:'The learned line is stored as two numbers: slope and intercept. The slope tells us how many newtons change for each volt. The intercept is the small offset in the conversion rule.',
-    newreading:'After calibration, the model is no longer learning. We give it a new voltage reading from the sensor, such as 1.05 V.',
-    force:'The fixed line converts that new voltage into an estimated force. With these sample calibration points, 1.05 V is about 26.0 N.'
+    problem:'The sensor gives voltage, but the exact voltage-to-force conversion is not built into our program. If we already had a trustworthy physics equation or manufacturer calibration equation, we would use it. Here we have examples instead, so we let the data teach us the relationship.',
+    examples:'These are calibration examples where both values are already known. For example, 0.42 V happened when 10 N was applied. We collect several pairs because real measurements can have noise and small variation.',
+    pattern:'The force increases by about 10 N whenever voltage rises by about 0.4 V. That is a nearly constant rate of change. On a graph, a constant rate of change looks approximately like a straight line.',
+    line:'A straight line is our first model because it is the simplest shape that matches the pattern we see. We are not claiming every relationship is linear. We try the line, measure its errors, and only keep it if it describes the data well enough.',
+    parameters:'The line can be stored with two numbers. Slope tells us the rate of change — roughly how many newtons correspond to one extra volt. Intercept handles the offset. Together they turn the visual line into a reusable equation.',
+    curve:'A curve is allowed. If the calibration points bend, or the line makes systematic errors, a curved model may be better. The point of modelling is not to force a line onto the data; it is to choose a useful relationship that works on new readings.',
+    newreading:'After the relationship has been learned, we can give the model a voltage whose force is unknown, such as 1.05 V. The learned equation estimates the force without repeating the calibration experiment.',
+    force:'With these sample calibration points, the learned line estimates about 26 N for 1.05 V. The useful part is not the line itself — it is that the learned relationship can now convert future sensor readings into physical values.'
   };
 
   function model1(){
@@ -19,25 +22,47 @@
   function fixQuestion(){
     if(!model1())return;
     const q=document.querySelector('.v5-question');
-    if(!q||q.dataset.v8Clear==='1')return;
+    if(!q)return;
     q.dataset.v8Clear='1';
-    q.textContent='The sensor shows voltage, but we want force. How can we use the voltage reading to estimate force in newtons?';
+    q.textContent='We can measure voltage and force together during a test. Can we use those examples to learn a rule that estimates force later, when only voltage is known?';
     const eli=document.querySelector('.v5-eli5');
     if(eli){
       eli.dataset.v8Clear='1';
-      eli.innerHTML='<b>Start with a simple calibration test</b><br>Press the sensor with forces we already know — for example 10 N, 20 N, 30 N — and record the voltage each time. Those known pairs show how voltage changes with force. Linear regression learns one straight-line conversion rule from them. Later, when the sensor gives a new voltage, that rule estimates the force.';
-      if(!eli.nextElementSibling?.classList.contains('v8-question-note')){
-        eli.insertAdjacentHTML('afterend','<div class="v8-question-note"><b>The goal on this lesson:</b> learn how examples such as <b>0.42 V = 10 N</b> become a reusable conversion rule for new sensor readings.</div>');
+      eli.innerHTML='<b>First: why use machine learning at all?</b><br>If an exact, trustworthy conversion equation already existed, we would simply use that equation. But often we have measurements instead: known forces and the voltages the real sensor produced. Machine learning means using those examples to learn the relationship instead of hand-writing the relationship ourselves.';
+      let note=eli.nextElementSibling;
+      if(!note?.classList.contains('v8-question-note')){
+        eli.insertAdjacentHTML('afterend','<div class="v8-question-note"></div>');
+        note=eli.nextElementSibling;
       }
+      note.innerHTML='<b>What this chapter is really teaching:</b> why data can become a prediction rule, why a straight line is a reasonable first model here, what slope physically means, and when a curve would be a better choice.';
     }
   }
 
   function modelScreenHTML(){
     return `<div class="v8-model-story">
       <section class="v8-model-main">
-        <div class="v5-kicker">WHAT LINEAR REGRESSION IS DOING HERE</div>
-        <h2>Learn a voltage → force conversion rule</h2>
-        <p>During calibration, we already know the force we applied and we measure the voltage the sensor produces. Linear regression uses those pairs to learn the straight-line relationship between the two.</p>
+        <div class="v5-kicker">FROM DATA → RELATIONSHIP → PREDICTION</div>
+        <h2>Why do we need a model at all?</h2>
+        <p>During calibration we know both values: the force we applied and the voltage the sensor produced. Later, the machine will only give us voltage. We need a reusable rule that turns that voltage into an estimated force.</p>
+
+        <div class="v8-why-grid">
+          <article class="v8-why-card">
+            <small>1 · WHY ML?</small>
+            <h3>Because the relationship is not already written down for us.</h3>
+            <p>If we already knew an exact equation, we would use it. Here we have examples from the real sensor, so we ask the data to teach us the mapping.</p>
+          </article>
+          <article class="v8-why-card">
+            <small>2 · WHY A LINE?</small>
+            <h3>Because the change is almost constant.</h3>
+            <p>About every 0.4 V increase corresponds to about 10 N more force. A nearly constant rate of change is exactly the pattern a straight line represents.</p>
+          </article>
+          <article class="v8-why-card">
+            <small>3 · WHY SLOPE?</small>
+            <h3>Slope is the rate hidden inside the line.</h3>
+            <p>A slope near 25 N/V means that one extra volt corresponds to roughly 25 extra newtons. It turns “the line goes upward” into a useful physical number.</p>
+          </article>
+        </div>
+
         <div class="v8-calibration-pairs" aria-label="Example calibration pairs">
           <span class="v8-pair">0.42 V ↔ 10 N</span>
           <span class="v8-pair">0.81 V ↔ 20 N</span>
@@ -45,32 +70,47 @@
           <span class="v8-pair">1.60 V ↔ 40 N</span>
           <span class="v8-pair">1.98 V ↔ 50 N</span>
         </div>
-        <div class="v8-flow" aria-label="Linear regression calibration flow">
-          <button class="v8-flow-step active" data-v8-part="examples"><small>1 · CALIBRATION DATA</small><b>Known voltage + known force</b><span>Give the model examples where the answer is already known.</span></button>
-          <button class="v8-flow-step" data-v8-part="line"><small>2 · FIT</small><b>Find the best straight line</b><span>Choose the line that best follows all calibration points.</span></button>
-          <button class="v8-flow-step" data-v8-part="parameters"><small>3 · LEARN</small><b>Save slope + intercept</b><span>These two numbers become the conversion rule.</span></button>
-          <button class="v8-flow-step" data-v8-part="newreading"><small>4 · NEW READING</small><b>Sensor gives 1.05 V</b><span>No known force is provided now.</span></button>
-          <button class="v8-flow-step" data-v8-part="force"><small>5 · PREDICT</small><b>Estimate the force</b><span>The learned rule gives about 26.0 N.</span></button>
+
+        <div class="v8-pattern-callout">
+          <div><small>LOOK AT THE PATTERN</small><b>+0.39 V → +10 N</b></div>
+          <div><small>AGAIN</small><b>+0.41 V → +10 N</b></div>
+          <div><small>AGAIN</small><b>+0.38 V → +10 N</b></div>
+          <p>The increments are not perfectly identical, but they are close. That is why a straight-line model is a sensible first attempt.</p>
         </div>
-        <div class="v8-explain" id="v8FlowExplain"><b>Step 1 · Calibration data</b><br>${explanation.examples}</div>
+
+        <div class="v8-flow" aria-label="Linear regression reasoning flow">
+          <button class="v8-flow-step active" data-v8-part="problem"><small>1 · PROBLEM</small><b>We need a conversion rule</b><span>Future readings give voltage, not force.</span></button>
+          <button class="v8-flow-step" data-v8-part="examples"><small>2 · EXAMPLES</small><b>Collect known pairs</b><span>Measure voltage while applying known forces.</span></button>
+          <button class="v8-flow-step" data-v8-part="pattern"><small>3 · PATTERN</small><b>Check how the values change</b><span>The rate looks nearly constant.</span></button>
+          <button class="v8-flow-step" data-v8-part="line"><small>4 · MODEL CHOICE</small><b>Try the simplest matching shape</b><span>A constant rate suggests a line.</span></button>
+          <button class="v8-flow-step" data-v8-part="parameters"><small>5 · LEARN</small><b>Find slope + intercept</b><span>Fit the line that best matches all examples.</span></button>
+          <button class="v8-flow-step" data-v8-part="newreading"><small>6 · USE IT</small><b>Give it a new voltage</b><span>The learned rule estimates force.</span></button>
+        </div>
+        <div class="v8-explain" id="v8FlowExplain"><b>Step 1 · Why a model?</b><br>${explanation.problem}</div>
       </section>
+
       <aside class="v8-model-side">
         <div class="v8-side-card">
-          <small>MODEL IDEA</small>
-          <h3>What is linear regression?</h3>
-          <p>It finds the straight-line relationship that best matches the examples. For this sensor, that line becomes the rule for converting voltage into force.</p>
+          <small>LINEAR REGRESSION</small>
+          <h3>Why does this method exist?</h3>
+          <p>It gives us a systematic way to learn the best straight-line relationship from noisy examples instead of choosing a line by eye.</p>
         </div>
         <div class="v8-side-card">
-          <small>TRAINING</small>
-          <h3>What does it learn?</h3>
-          <p><b>Slope:</b> how much the predicted force changes for each extra volt.<br><br><b>Intercept:</b> the small offset in the line.</p>
+          <small>THE LINE</small>
+          <h3>What does slope actually mean?</h3>
+          <p><b>Slope</b> is change in predicted force divided by change in voltage. Here it is about <b>25 N/V</b>, so an extra volt corresponds to roughly 25 additional newtons.</p>
+          <div class="v8-equation">slope = change in force ÷ change in voltage</div>
           <div class="v8-equation">Force ≈ 25.57 × Voltage − 0.84</div>
         </div>
         <div class="v8-side-card">
-          <small>PREDICTION</small>
-          <h3>What happens after training?</h3>
-          <p>The slope and intercept stay fixed. A new voltage goes into the equation and an estimated force comes out. The model does not retrain for every reading.</p>
-          <div class="v8-equation">1.05 V → about 26.0 N</div>
+          <small>WHY NOT A CURVE?</small>
+          <h3>A curve may be better sometimes.</h3>
+          <p>We start with a line because it is simple and the data looks close to linear. If the points bend or the line misses them in a systematic pattern, we should use a more flexible model instead.</p>
+        </div>
+        <div class="v8-side-card">
+          <small>CORE ML IDEA</small>
+          <h3>Do not use complexity unless the data needs it.</h3>
+          <p>Start with the simplest model that could explain the pattern. Test it on data. Make the model more flexible only when the simpler relationship is not good enough.</p>
         </div>
       </aside>
     </div>`;
@@ -79,7 +119,9 @@
   function fixModelScreen(){
     if(!model1()||!/^3\./.test(activeStep().trim()))return;
     const screen=document.querySelector('#v5Screen');
-    if(!screen||screen.querySelector('.v8-model-story'))return;
+    if(!screen)return;
+    if(screen.dataset.v10Reasoning==='1')return;
+    screen.dataset.v10Reasoning='1';
     screen.innerHTML=modelScreenHTML();
   }
 
@@ -93,7 +135,7 @@
     if(!b)return;
     document.querySelectorAll('[data-v8-part]').forEach(x=>x.classList.toggle('active',x===b));
     const key=b.dataset.v8Part;
-    const labels={examples:'Step 1 · Calibration data',line:'Step 2 · Fit the line',parameters:'Step 3 · Learned parameters',newreading:'Step 4 · New sensor reading',force:'Step 5 · Force estimate'};
+    const labels={problem:'Step 1 · Why a model?',examples:'Step 2 · Calibration examples',pattern:'Step 3 · Notice the pattern',line:'Step 4 · Why try a line?',parameters:'Step 5 · What slope and intercept mean',curve:'Why not a curve?',newreading:'Step 6 · Use the learned rule',force:'Prediction'};
     const out=document.querySelector('#v8FlowExplain');
     if(out)out.innerHTML=`<b>${labels[key]||'Step'}</b><br>${explanation[key]||''}`;
   });
