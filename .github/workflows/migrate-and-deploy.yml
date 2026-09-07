@@ -30,9 +30,16 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done
+          for file in scripts/*.mjs; do
+            echo "Checking $file"
+            node --check "$file"
+          done
 
       - name: Validate curriculum coherence
         run: node scripts/validate-curriculum.mjs
+
+      - name: Validate runtime contracts
+        run: node scripts/validate-runtime.mjs
 
       - name: Ensure GitHub Pages is enabled for Actions
         id: enable_pages
