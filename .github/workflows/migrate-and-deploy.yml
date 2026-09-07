@@ -1,0 +1,79 @@
+name: Migrate ModelQuest and deploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "modelquest-pages"
+  cancel-in-progress: false
+
+jobs:
+  migrate-and-deploy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout ModelQuest
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Copy the current ModelQuest source from Forge
+        run: |
+          rm -f .init
+          git clone --depth 1 https://github.com/Neil-Doshi/Forge.git /tmp/forge
+          cp -a /tmp/forge/public/modelquest/. .
+
+      - name: Write standalone repository README
+        run: |
+          cat > README.md <<'EOF'
+          # ModelQuest
+
+          A mobile-friendly, game-like machine-learning learning world built around real mechanical-engineering examples.
+
+          The course progresses through 13 model quests, from industrial sensor calibration and predictive maintenance to Transformers, LoRA, and a final engineering RAG copilot. Lessons connect interactive visuals, theory, math, code, real-world failure modes, GitHub, Hugging Face, and free-first Google Colab workflows.
+
+          ## Live site
+
+          https://neil-doshi.github.io/ModelQuest/
+          EOF
+
+      - name: Validate JavaScript syntax
+        run: |
+          for file in *.js; do
+            echo "Checking $file"
+            node --check "$file"
+          done
+
+      - name: Commit migrated source into ModelQuest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Move ModelQuest into its standalone repository"
+            git push origin main
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
