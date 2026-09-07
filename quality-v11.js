@@ -20,11 +20,23 @@
       ['7 · CPU vs GPU', 'A CPU is enough for the early quests. Neural-network, CNN, LSTM and LoRA work can be faster on a GPU. In Colab use Runtime → Change runtime type → choose a GPU when one is available. A GPU does not make incorrect code correct.'],
       ['8 · Know what environment ran the code', 'Libraries change. When an advanced notebook behaves differently, record the library versions before assuming you made a mistake. Knowing the environment makes an experiment reproducible.']
     ];
+    const bridges = [
+      ['Graph bridge','A graph is a picture of paired measurements. Moving right means the horizontal quantity increased; moving up means the vertical quantity increased. One dot means one recorded pair. We graph data because patterns are often easier to see than in a table.','Model 1'],
+      ['Rate / “per” bridge','“Per” means one quantity divided by another. 60 miles in 2 hours is 30 miles per hour. 10 N change across 0.39 V is about 25.6 N per volt. Slope is a rate of change.','Model 1'],
+      ['Weighted-sum bridge','If vibration matters four times as strongly as temperature in a toy calculation, we can multiply each clue by a different number before adding them. Example: [2, 3] with weights [4, 1] gives 2×4 + 3×1 = 11. Those learned multipliers later get the name weights.','Model 7'],
+      ['Vector bridge','A vector is simply an ordered list of numbers treated as one object. [temperature, vibration, torque] can represent one machine reading. The order matters because each position has a meaning.','Models 7, 11, 13'],
+      ['Matrix bridge','A matrix is a rectangular table of numbers. It becomes useful when many weighted calculations must happen together. Neural-network code uses matrix multiplication because it can compute many neurons for many examples efficiently.','Models 7, 9, 11, 12'],
+      ['Derivative / sensitivity bridge','Before the symbol, learn the question: “If I change this value a tiny amount, how much does the result change?” A derivative is a number that answers that sensitivity question. Gradients collect those sensitivities for many parameters.','Model 7'],
+      ['Softmax bridge','Sometimes a model produces several raw class scores. We need a stable way to turn them into positive weights that add to 1. Softmax does that. The largest score usually gets the largest share, but the values are still model outputs that must be evaluated.','Models 7, 11'],
+      ['Similarity bridge','If two vectors point in similar directions, they can represent similar patterns even when they are not identical. Modern text retrieval uses this idea to find document chunks whose meaning is close to a question.','Models 11, 13']
+    ];
     return `<div class="v5-root mq11-basecamp"><main>
-      <div class="mq11-base-head"><div><div class="v5-kicker">BASE CAMP · ABSOLUTE BEGINNER</div><h1>Before machine learning: make the computer predictable</h1><p>The goal is not to become a programmer first. It is to know what you are clicking, what Python is doing, where results appear, and what an error means.</p></div><button class="v5-btn" id="mq11BaseReturn">← Back to map</button></div>
+      <div class="mq11-base-head"><div><div class="v5-kicker">BASE CAMP · ABSOLUTE BEGINNER</div><h1>Before machine learning: make the computer predictable</h1><p>The goal is not to become a programmer or mathematician first. It is to know what you are clicking and to build each small idea before a later model depends on it.</p></div><button class="v5-btn" id="mq11BaseReturn">← Back to map</button></div>
       <section class="mq11-first-run"><div><div class="v5-kicker">TRY THE IDEA HERE</div><h2>A code cell is just an instruction you choose to run.</h2><pre>force_n = 25
 print(force_n)</pre><button class="v5-btn primary" id="mq11FakeRun">▶ Run this fake practice cell</button></div><div class="mq11-output"><small>OUTPUT</small><strong id="mq11FakeOutput">Nothing yet — the cell has not run.</strong></div></section>
-      <section class="mq11-base-grid">${steps.map((s,i)=>`<article class="mq11-base-card"><small>FOUNDATION ${i+1}/8</small><h3>${esc(s[0])}</h3><p>${esc(s[1])}</p></article>`).join('')}</section>
+      <section class="mq11-base-grid">${steps.map((s,i)=>`<article class="mq11-base-card"><small>COMPUTER FOUNDATION ${i+1}/8</small><h3>${esc(s[0])}</h3><p>${esc(s[1])}</p></article>`).join('')}</section>
+      <div class="mq11-bridge-head"><div class="v5-kicker">MATH + REPRESENTATION BRIDGES</div><h2>These exist only because later models need them.</h2><p>No symbol is the starting point. Each bridge begins with the problem the idea solves.</p></div>
+      <section class="mq11-base-grid">${bridges.map((s,i)=>`<article class="mq11-base-card mq11-bridge-card"><small>${esc(s[2])}</small><h3>${esc(s[0])}</h3><p>${esc(s[1])}</p></article>`).join('')}</section>
       <section class="mq11-version-card"><div class="v5-kicker">ADVANCED QUESTS · VERSION CHECK</div><h3>When a package error appears, capture this before changing the lesson.</h3><pre>import sys
 print('Python:', sys.version)
 
@@ -72,7 +84,7 @@ print('scikit-learn:', sklearn.__version__)</pre><p>This helps separate “I mis
     const host=document.querySelector('.v5-quest-body') || document.querySelector('.v5-screen-head')?.parentElement;
     if(!host) return;
     const box=document.createElement('section'); box.className='mq11-prereq';
-    box.innerHTML=`<div><small>BEFORE THIS QUEST</small><strong>${id===1?'Start from zero — no ML knowledge assumed.':'This quest builds on:'}</strong><div class="mq11-chips">${(c.prerequisites||[]).map(x=>`<span>${esc(x)}</span>`).join('')}</div></div><button class="v5-btn" data-mq11-basecamp>Open Base Camp</button>`;
+    box.innerHTML=`<div><small>BEFORE THIS QUEST</small><strong>${id===1?'Start from zero — no ML knowledge assumed.':'This quest builds on:'}</strong><div class="mq11-chips">${(c.prerequisites||[]).map(x=>`<span>${esc(x)}</span>`).join('')}</div></div><button class="v5-btn" data-mq11-basecamp>Open Base Camp / bridges</button>`;
     box.querySelector('button').onclick=openBaseCamp;
     host.prepend(box);
   }
