@@ -1,5 +1,30 @@
 /* ModelQuest v9 interaction bridge for content rewritten after the base quest binds its handlers. */
 (()=>{
+  /*
+   * World v5 asks for mqLabFor()/mqInitLab() on the TRY IT screen.
+   * Model 1 has its own calibration lab, so this missing bridge was hidden there.
+   * Studio v4 already contains working labs for Models 2-13; expose them under
+   * the names the current world renderer expects.
+   */
+  window.mqLabFor=function(id){
+    id=Number(id);
+    if(id===2 && typeof window.mqLab2==='function') return window.mqLab2();
+    if(id===7 && typeof window.mqLab7==='function') return window.mqLab7();
+    if(typeof window.mqGenericLab==='function') return window.mqGenericLab(id);
+    return '<div class="lab-explain"><strong>Lab unavailable.</strong> The interactive lab module did not load correctly.</div>';
+  };
+
+  window.mqInitLab=function(id){
+    id=Number(id);
+    if(typeof window.mqInitLabStudio==='function'){
+      window.mqInitLabStudio(id);
+      return;
+    }
+    if(id===2 && typeof window.mqInitLab2==='function') window.mqInitLab2();
+    else if(id===7 && typeof window.mqInitLab7==='function') window.mqInitLab7();
+    else if(typeof window.mqInitGeneric==='function') window.mqInitGeneric(id);
+  };
+
   const official={
     1:'https://scikit-learn.org/stable/modules/linear_model.html#ordinary-least-squares',
     2:'https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression',
